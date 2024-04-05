@@ -12,13 +12,12 @@ func init() {
 
 func GlobalInit(level slog.Level, options *Options) {
 	if defaultEnv("PFXLOG_NO_JSON", false) || terminal.IsTerminal(int(os.Stdout.Fd())) {
-		// pretty
+		logger := slog.New(NewPrettyHandler(level, options))
+		slog.SetDefault(logger)
 	} else {
-		// json
+		logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level, AddSource: true}))
+		slog.SetDefault(logger)
 	}
-	//logrus.SetLevel(level)
-	//logrus.SetReportCaller(true)
-
 	globalOptions = options
 }
 
@@ -27,13 +26,11 @@ func GlobalConfig(f func(*Options) *Options) {
 }
 
 func Logger() *slog.Logger {
-	//return &Builder{Entry: logrus.NewEntry(globalOptions.StandardLogger)}
-	return nil
+	return slog.Default()
 }
 
 func ContextLogger(context string) *slog.Logger {
-	//return &Builder{Entry: globalOptions.StandardLogger.WithField("_context", context)}
-	return nil
+	return slog.Default().With(slog.String("_context", context))
 }
 
 type Builder struct {
