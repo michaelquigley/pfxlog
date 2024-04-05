@@ -15,6 +15,7 @@ type PrettyHandler struct {
 	level   slog.Level
 	options *Options
 	lock    sync.Mutex
+	attrs   []slog.Attr
 }
 
 func NewPrettyHandler(level slog.Level, options *Options) slog.Handler {
@@ -53,9 +54,14 @@ func (h *PrettyHandler) Handle(_ context.Context, r slog.Record) error {
 		functionStr = strings.TrimPrefix(functionStr, h.options.TrimPrefix)
 	}
 
+	r.AddAttrs(h.attrs...)
 	fieldsMap := make(map[string]interface{}, r.NumAttrs())
 	r.Attrs(func(a slog.Attr) bool {
-		fieldsMap[a.Key] = a.Value.Any()
+		if a.Key != "_context" {
+			fieldsMap[a.Key] = a.Value.Any()
+		} else {
+			functionStr += " |" + fmt.Sprintf("%v", a.Value) + "|"
+		}
 		return true
 	})
 	fieldsBytes, err := json.Marshal(fieldsMap)
@@ -79,7 +85,7 @@ func (h *PrettyHandler) Handle(_ context.Context, r slog.Record) error {
 }
 
 func (h *PrettyHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return h
+	return &PrettyHandler{level: h.level, options: h.options, attrs: attrs}
 }
 
 func (h *PrettyHandler) WithGroup(name string) slog.Handler {

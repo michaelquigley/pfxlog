@@ -9,12 +9,12 @@ import (
 )
 
 func init() {
-	pfxlog.GlobalInit(slog.LevelDebug, pfxlog.DefaultOptions().SetTrimPrefix("github.com/michaelquigley/").SetAbsoluteTime())
+	pfxlog.GlobalInit(slog.LevelDebug, pfxlog.DefaultOptions().SetTrimPrefix("github.com/michaelquigley/"))
 }
 
 func main() {
 	log := pfxlog.Logger()
-	log.Info("hello world.")
+	log.With(slog.String("hello", "world")).Info("hello world")
 
 	notifications := make(chan int)
 	for i := 0; i < 50; i++ {
@@ -23,17 +23,17 @@ func main() {
 
 	for i := 0; i < 50; i++ {
 		n := <-notifications
-		log.With(slog.Any("n", n), slog.Any("oh", "wow")).Info("done")
+		slog.With(slog.Int("n", n)).Info("done")
 	}
 
-	log.Info("complete.")
+	slog.Info("complete")
 }
 
 func counter(number int, notify chan int) {
 	log := pfxlog.ContextLogger(fmt.Sprintf("#%d", number))
 
 	for i := 0; i < 5; i++ {
-		log.Info("visited %d.", i)
+		pfxlog.Infof("visited %d.", i)
 	}
 
 	time.Sleep(1 * time.Second)
