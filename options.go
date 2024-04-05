@@ -3,7 +3,6 @@ package pfxlog
 import (
 	"fmt"
 	"github.com/mgutz/ansi"
-	"github.com/sirupsen/logrus"
 	"os"
 	"strconv"
 	"strings"
@@ -15,40 +14,26 @@ type Options struct {
 	AbsoluteTime   bool
 	TrimPrefix     string
 
-	PanicLabel   string
-	FatalLabel   string
 	ErrorLabel   string
 	WarningLabel string
 	InfoLabel    string
 	DebugLabel   string
-	TraceLabel   string
 
 	TimestampColor string
 	FunctionColor  string
 	FieldsColor    string
 	DefaultFgColor string
 
-	PrettyTimestampFormat string
-	JsonTimestampFormat   string
+	TimestampFormat string
 
-	ActiveChannels           map[string]struct{}
-	ChannelLogLevelOverrides map[string]logrus.Level
-
-	DataFielder    func(data interface{}, entry *logrus.Entry) *logrus.Entry
-	EnabledChecker func(data interface{}) bool
-
-	StandardLogger *logrus.Logger
-	Loggers        map[logrus.Level]*logrus.Logger
+	ActiveChannels map[string]struct{}
 }
 
 func DefaultOptions() *Options {
 	options := &Options{
-		StartTimestamp:        time.Now(),
-		AbsoluteTime:          false,
-		PrettyTimestampFormat: "2006-01-02 15:04:05.000",
-		JsonTimestampFormat:   "2006-01-02T15:04:05.000Z",
-		StandardLogger:        logrus.StandardLogger(),
-		Loggers:               map[logrus.Level]*logrus.Logger{},
+		StartTimestamp:  time.Now(),
+		AbsoluteTime:    false,
+		TimestampFormat: "2006-01-02 15:04:05.000",
 	}
 
 	if defaultEnv("PFXLOG_USE_COLOR", false) {
@@ -89,33 +74,11 @@ func (options *Options) SetActiveChannels(channels ...string) *Options {
 	return options
 }
 
-func (options *Options) SetChannelLogLevel(channel string, level logrus.Level) {
-	m := map[string]logrus.Level{}
-	for k, v := range options.ChannelLogLevelOverrides {
-		m[k] = v
-	}
-	m[channel] = level
-	options.ChannelLogLevelOverrides = m
-}
-
-func (options *Options) ClearChannelLogLevel(channel string) {
-	m := map[string]logrus.Level{}
-	for k, v := range options.ChannelLogLevelOverrides {
-		if k != channel {
-			m[k] = v
-		}
-	}
-	options.ChannelLogLevelOverrides = m
-}
-
 func (options *Options) Color() *Options {
-	options.PanicLabel = ansi.Red + "  PANIC" + ansi.DefaultFG
-	options.FatalLabel = ansi.Red + "  FATAL" + ansi.DefaultFG
 	options.ErrorLabel = ansi.Red + "  ERROR" + ansi.DefaultFG
 	options.WarningLabel = ansi.Yellow + "WARNING" + ansi.DefaultFG
 	options.InfoLabel = ansi.White + "   INFO" + ansi.DefaultFG
 	options.DebugLabel = ansi.Blue + "  DEBUG" + ansi.DefaultFG
-	options.TraceLabel = ansi.LightBlack + "  TRACE" + ansi.DefaultFG
 
 	options.TimestampColor = ansi.Blue
 	options.FunctionColor = ansi.Cyan
@@ -126,13 +89,10 @@ func (options *Options) Color() *Options {
 }
 
 func (options *Options) NoColor() *Options {
-	options.PanicLabel = "  PANIC"
-	options.FatalLabel = "  FATAL"
 	options.ErrorLabel = "  ERROR"
 	options.WarningLabel = "WARNING"
 	options.InfoLabel = "   INFO"
 	options.DebugLabel = "  DEBUG"
-	options.TraceLabel = "  TRACE"
 
 	options.TimestampColor = ""
 	options.FunctionColor = ""
@@ -140,17 +100,6 @@ func (options *Options) NoColor() *Options {
 	options.DefaultFgColor = ""
 
 	return options
-}
-
-func CloneLogger(logger *logrus.Logger) *logrus.Logger {
-	return &logrus.Logger{
-		Out:          logger.Out,
-		Hooks:        logger.Hooks,
-		Formatter:    logger.Formatter,
-		ReportCaller: logger.ReportCaller,
-		Level:        logger.Level,
-		ExitFunc:     logger.ExitFunc,
-	}
 }
 
 func defaultEnv(env string, defaultValue bool) bool {

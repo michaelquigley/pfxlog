@@ -40,10 +40,6 @@ func Filter(sourceR io.Reader, options *Options) {
 		delta := stamp.Sub(last).Seconds()
 		var level string
 		switch msg["level"].(string) {
-		case "panic":
-			level = options.PanicLabel
-		case "fatal":
-			level = options.FatalLabel
 		case "error":
 			level = options.ErrorLabel
 		case "warning":
@@ -52,8 +48,6 @@ func Filter(sourceR io.Reader, options *Options) {
 			level = options.InfoLabel
 		case "debug":
 			level = options.DebugLabel
-		case "trace":
-			level = options.TraceLabel
 		default:
 			panic(fmt.Errorf("unknown (%s)", msg["level"].(string)))
 		}
@@ -81,7 +75,7 @@ func Filter(sourceR io.Reader, options *Options) {
 		}
 		var fmtTs string
 		if options.AbsoluteTime {
-			fmtTs = fmt.Sprintf("[%s]", stamp.Format(options.PrettyTimestampFormat))
+			fmtTs = fmt.Sprintf("[%s]", stamp.Format(options.TimestampFormat))
 		} else {
 			fmtTs = fmt.Sprintf("[%8.3f]", delta)
 		}

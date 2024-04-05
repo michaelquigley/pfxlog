@@ -18,17 +18,13 @@ func NewFormatter(options *Options) logrus.Formatter {
 func (f *formatter) Format(entry *logrus.Entry) ([]byte, error) {
 	var timeLabel string
 	if f.options.AbsoluteTime {
-		timeLabel = "[" + time.Now().Format(f.options.PrettyTimestampFormat) + "]"
+		timeLabel = "[" + time.Now().Format(f.options.TimestampFormat) + "]"
 	} else {
 		seconds := time.Since(f.options.StartTimestamp).Seconds()
 		timeLabel = fmt.Sprintf("[%8.3f]", seconds)
 	}
 	var level string
 	switch entry.Level {
-	case logrus.PanicLevel:
-		level = f.options.PanicLabel
-	case logrus.FatalLevel:
-		level = f.options.FatalLabel
 	case logrus.ErrorLevel:
 		level = f.options.ErrorLabel
 	case logrus.WarnLevel:
@@ -37,8 +33,6 @@ func (f *formatter) Format(entry *logrus.Entry) ([]byte, error) {
 		level = f.options.InfoLabel
 	case logrus.DebugLevel:
 		level = f.options.DebugLabel
-	case logrus.TraceLevel:
-		level = f.options.TraceLabel
 	}
 	trimmedFunction := ""
 	if entry.Caller != nil {
