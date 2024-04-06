@@ -30,7 +30,7 @@ func main() {
 }
 
 func counter(number int, notify chan int) {
-	log := pfxlog.ContextLogger(fmt.Sprintf("#%d", number))
+	log := pfxlog.Channel(fmt.Sprintf("#%d", number))
 
 	for i := 0; i < 5; i++ {
 		pfxlog.Infof("visited %d.", i)

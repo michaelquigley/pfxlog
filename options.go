@@ -21,6 +21,7 @@ type Options struct {
 
 	TimestampColor string
 	FunctionColor  string
+	ChannelColor   string
 	FieldsColor    string
 	DefaultFgColor string
 
@@ -82,6 +83,7 @@ func (options *Options) Color() *Options {
 
 	options.TimestampColor = ansi.Blue
 	options.FunctionColor = ansi.Cyan
+	options.ChannelColor = ansi.LightBlue
 	options.FieldsColor = ansi.LightCyan
 	options.DefaultFgColor = ansi.DefaultFG
 
@@ -96,6 +98,7 @@ func (options *Options) NoColor() *Options {
 
 	options.TimestampColor = ""
 	options.FunctionColor = ""
+	options.ChannelColor = ""
 	options.FieldsColor = ""
 	options.DefaultFgColor = ""
 

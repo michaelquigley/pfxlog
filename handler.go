@@ -27,6 +27,8 @@ func (h *PrettyHandler) Enabled(_ context.Context, level slog.Level) bool {
 }
 
 func (h *PrettyHandler) Handle(_ context.Context, r slog.Record) error {
+	var out strings.Builder
+
 	var timeLabel string
 	if h.options.AbsoluteTime {
 		timeLabel = "[" + time.Now().Format(h.options.TimestampFormat) + "]"
@@ -34,6 +36,7 @@ func (h *PrettyHandler) Handle(_ context.Context, r slog.Record) error {
 		seconds := time.Since(h.options.StartTimestamp).Seconds()
 		timeLabel = fmt.Sprintf("[%8.3f]", seconds)
 	}
+	out.WriteString(h.options.TimestampColor + timeLabel + h.options.DefaultFgColor)
 
 	var level string
 	switch r.Level {
@@ -46,6 +49,7 @@ func (h *PrettyHandler) Handle(_ context.Context, r slog.Record) error {
 	case slog.LevelDebug:
 		level = h.options.DebugLabel
 	}
+	out.WriteString(" " + level)
 
 	fs := runtime.CallersFrames([]uintptr{r.PC})
 	f, _ := fs.Next()
@@ -53,14 +57,15 @@ func (h *PrettyHandler) Handle(_ context.Context, r slog.Record) error {
 	if h.options.TrimPrefix != "" {
 		functionStr = strings.TrimPrefix(functionStr, h.options.TrimPrefix)
 	}
+	out.WriteString(" " + h.options.FunctionColor + functionStr + h.options.DefaultFgColor)
 
 	r.AddAttrs(h.attrs...)
 	fieldsMap := make(map[string]interface{}, r.NumAttrs())
 	r.Attrs(func(a slog.Attr) bool {
-		if a.Key != "_context" {
+		if a.Key != ChannelKey {
 			fieldsMap[a.Key] = a.Value.Any()
 		} else {
-			functionStr += " |" + fmt.Sprintf("%v", a.Value) + "|"
+			out.WriteString(h.options.ChannelColor + " |" + a.Value.String() + "|" + h.options.DefaultFgColor)
 		}
 		return true
 	})
@@ -68,17 +73,14 @@ func (h *PrettyHandler) Handle(_ context.Context, r slog.Record) error {
 	if err != nil {
 		return err
 	}
-	fieldsStr := ""
 	if len(fieldsBytes) > 2 {
-		fieldsStr = h.options.FieldsColor + string(fieldsBytes) + h.options.DefaultFgColor
+		out.WriteString(" " + h.options.FieldsColor + string(fieldsBytes) + h.options.DefaultFgColor)
 	}
 
+	out.WriteString(" " + r.Message)
+
 	h.lock.Lock()
-	fmt.Println(h.options.TimestampColor+timeLabel+h.options.DefaultFgColor,
-		level,
-		h.options.FunctionColor+functionStr+h.options.DefaultFgColor,
-		fieldsStr,
-		r.Message)
+	fmt.Println(out.String())
 	h.lock.Unlock()
 
 	return nil
