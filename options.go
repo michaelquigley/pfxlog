@@ -83,7 +83,7 @@ func (options *Options) Color() *Options {
 
 	options.TimestampColor = ansi.Blue
 	options.FunctionColor = ansi.Cyan
-	options.ChannelColor = ansi.LightBlue
+	options.ChannelColor = ansi.Yellow
 	options.FieldsColor = ansi.LightCyan
 	options.DefaultFgColor = ansi.DefaultFG
 
