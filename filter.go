@@ -40,23 +40,29 @@ func Filter(sourceR io.Reader, options *Options) {
 		delta := stamp.Sub(last).Seconds()
 		var level string
 		switch msg["level"].(string) {
-		case "error":
+		case "ERROR":
 			level = options.ErrorLabel
-		case "warning":
+		case "WARN":
 			level = options.WarningLabel
-		case "info":
+		case "INFO":
 			level = options.InfoLabel
-		case "debug":
+		case "DEBUG":
 			level = options.DebugLabel
 		default:
 			panic(fmt.Errorf("unknown (%s)", msg["level"].(string)))
 		}
 		var prefix string
-		if v, found := msg["func"]; found {
-			prefix = strings.TrimPrefix(v.(string), options.TrimPrefix)
+		if v, found := msg["source"]; found {
+			if srcmap, ok := v.(map[string]interface{}); ok {
+				if v, found := srcmap["function"]; found {
+					prefix = strings.TrimPrefix(v.(string), options.TrimPrefix)
+					delete(msg, "source")
+				}
+			}
 		}
-		if context, found := msg["_context"]; found {
-			prefix += " [" + context.(string) + "]"
+		if context, found := msg[ChannelKey]; found {
+			prefix += options.ChannelColor + " |" + context.(string) + "|" + options.DefaultFgColor
+			delete(msg, ChannelKey)
 		}
 		message := msg["msg"].(string)
 		data := data(msg)
@@ -79,7 +85,7 @@ func Filter(sourceR io.Reader, options *Options) {
 		} else {
 			fmtTs = fmt.Sprintf("[%8.3f]", delta)
 		}
-		fmt.Printf("%s %s %s: %s\n",
+		fmt.Printf("%s %s %s %s\n",
 			options.TimestampColor+fmtTs+options.DefaultFgColor,
 			level,
 			options.FunctionColor+prefix+options.DefaultFgColor,
