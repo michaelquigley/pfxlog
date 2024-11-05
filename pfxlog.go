@@ -13,11 +13,20 @@ import (
 const ChannelKey = "_channel"
 
 func GlobalInit(level slog.Level, options *Options) {
+	var handler slog.Handler
 	if defaultEnv("PFXLOG_NO_JSON", false) || terminal.IsTerminal(int(os.Stdout.Fd())) {
-		logger := slog.New(NewPrettyHandler(level, options))
+		handler = NewPrettyHandler(level, options)
+		if options.Handler != nil {
+			handler = options.Handler
+		}
+		logger := slog.New(handler)
 		slog.SetDefault(logger)
 	} else {
-		logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level, AddSource: true}))
+		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level, AddSource: true})
+		if options.Handler != nil {
+			handler = options.Handler
+		}
+		logger := slog.New(handler)
 		slog.SetDefault(logger)
 	}
 	globalOptions = options
