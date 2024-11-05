@@ -3,6 +3,7 @@ package pfxlog
 import (
 	"fmt"
 	"github.com/mgutz/ansi"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
@@ -10,6 +11,7 @@ import (
 )
 
 type Options struct {
+	Handler        slog.Handler
 	StartTimestamp time.Time
 	AbsoluteTime   bool
 	TrimPrefix     string
@@ -40,6 +42,11 @@ func DefaultOptions() *Options {
 	} else {
 		return options.NoColor()
 	}
+}
+
+func (options *Options) SetHandler(h slog.Handler) *Options {
+	options.Handler = h
+	return options
 }
 
 func (options *Options) Starting(t time.Time) *Options {
