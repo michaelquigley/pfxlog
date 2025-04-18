@@ -107,6 +107,28 @@ func Errorf(format string, args ...interface{}) {
 	_ = slog.Default().Handler().Handle(context.Background(), r)
 }
 
+func Fatal(args ...interface{}) {
+	if !slog.Default().Enabled(context.Background(), slog.LevelError) {
+		return
+	}
+	var pcs [1]uintptr
+	runtime.Callers(2, pcs[:]) // skip [Callers, Infof]
+	r := slog.NewRecord(time.Now(), slog.LevelError, fmt.Sprint(args...), pcs[0])
+	_ = slog.Default().Handler().Handle(context.Background(), r)
+	os.Exit(1)
+}
+
+func Fatalf(format string, args ...interface{}) {
+	if !slog.Default().Enabled(context.Background(), slog.LevelError) {
+		return
+	}
+	var pcs [1]uintptr
+	runtime.Callers(2, pcs[:]) // skip [Callers, Infof]
+	r := slog.NewRecord(time.Now(), slog.LevelError, fmt.Sprintf(format, args...), pcs[0])
+	_ = slog.Default().Handler().Handle(context.Background(), r)
+	os.Exit(1)
+}
+
 type Builder struct {
 	*slog.Logger
 }
